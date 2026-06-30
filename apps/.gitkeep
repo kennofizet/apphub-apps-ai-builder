@@ -1,0 +1,2 @@
+# Publisher apps go in this folder — one subfolder per app (apps/<slug>/).
+# This repo ships rules and tooling only; apps are created by the publisher or AI agent after clone.

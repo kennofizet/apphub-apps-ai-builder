@@ -1,0 +1,249 @@
+---
+description: App Hub publisher rules — integration contract placeholders, monorepo layout, i18n, theme, English-only authoring
+alwaysApply: true
+---
+
+# App Hub Publisher — Project Rules
+
+This repo is a **publisher kit** for **App Hub** (desktop host + app store). It does not ship sample apps. Publishers (or AI agents) create apps under `apps/<slug>/`. See `AGENTS.md` and `README.md` at repo root.
+
+## Publisher URLs — local config only (required reading)
+
+**All Hub URLs live in `apphub.publisher.json` at repo root.** That file is **gitignored** — each publisher copies from `apphub.publisher.example.json` and fills in their own values. **Never put real URLs in tracked files** (README, rules, or commits).
+
+| Key | Purpose |
+|-----|---------|
+| `integration_docs_url` | Machine-readable integration contract (JSON) from your App Hub operator |
+| `hub_portal_url` | Your App Hub portal (install, launch, store, upload) |
+
+Setup after clone:
+
+```bash
+cp apphub.publisher.example.json apphub.publisher.json
+# Edit apphub.publisher.json with your URLs (do not commit this file)
+```
+
+**App Hub** may inject URLs into this file when the publisher connects their instance.
+
+### Agent behavior
+
+1. **Read `apphub.publisher.json` first** (create from `apphub.publisher.example.json` if missing).
+2. If `integration_docs_url` is **empty or missing**, **stop and ask the user** for their integration docs URL. Do not invent API hosts or paths.
+3. If `hub_portal_url` is **empty or missing**, ask the user for their App Hub portal URL when deploy, testing, or store steps are needed.
+4. When set, fetch `integration_docs_url` and treat it as the authoritative contract (`schema_version`, routes, bridge). HTTP paths in this rule file are **examples** — use `http.base_path` from the fetched docs.
+
+**Official contract:** value of `integration_docs_url` in `apphub.publisher.json` only (not hardcoded in this repo).
+
+## Language — English only (authoring)
+
+All **source code**, **documentation**, **comments**, **commit messages**, **Cursor rules**, and **README files** in this repo must be written in **English**.
+
+- Identifiers, function names, types, API payloads, logs, and error messages in code: **English**
+- Inline comments and JSDoc/TSDoc: **English**
+- User-facing UI copy: still localized via i18n (`en` + `vi` locale files) — see below
+
+Do not add Vietnamese (or other language) prose in code, docs, or rules. Vietnamese strings belong only in `locales/vi.json` (and English in `locales/en.json`).
+
+## Monorepo layout
+
+- One app = **one folder** at repo root: `apps/<slug>/`
+- Each app **builds, deploys, and runs independently** (own `package.json`, `manifest.json`, optional backend)
+- No cross-imports between apps; share via `packages/` only when necessary (e.g. `packages/apphub-bridge/`)
+
+```
+apps/<slug>/
+  PLAN.md          # living plan + per-step checklists (required)
+  src/
+    components/
+    modules/       # api, stores, composables
+    locales/       # en.json, vi.json
+    themes/
+  manifest.json    # runtime_type, permissions, api_urls
+  package.json
+  README.md
+```
+
+## Root `.gitignore` — applies to all apps
+
+Maintain **one** `.gitignore` at the **repo root**. Do not duplicate per app unless an app has an exceptional local-only artifact — then add a one-line pointer in the app README, not a second full ignore file.
+
+**Must be ignored (root patterns):**
+
+| Category | Patterns |
+|----------|----------|
+| Dependencies | `node_modules/`, `.pnp`, `.pnp.js` |
+| Build output | `dist/`, `build/`, `out/`, `.output/`, `.nuxt/`, `.next/`, `.vite/`, `*.tsbuildinfo` |
+| Deploy bundles | `*.zip` (hosted Hub zips; exception only for intentional docs assets) |
+| Secrets | `.env`, `.env.*` (allow `!.env.example`), `*.pem`, `*.key`, `secrets/`, launch-token files |
+| Logs | `logs/`, `*.log`, `*-debug.log*` |
+| Test/coverage | `coverage/`, `.nyc_output/`, `playwright-report/`, `test-results/` |
+| Caches | `.cache/`, `.turbo/`, `.parcel-cache/`, `.eslintcache`, `.stylelintcache` |
+| OS/editor junk | `.DS_Store`, `Thumbs.db`, `.idea/`, swap files — **do not** ignore `.cursor/rules/` |
+| Hosting metadata | `.vercel/`, `.netlify/` |
+
+Never commit: `.env`, tokens, `launch_token`, private keys, or generated `dist/` / deploy zips.
+
+When adding a new tool stack (e.g. Python, Rust), extend **root** `.gitignore` once so every app inherits it.
+
+## Per-app plan and checklists — required
+
+Before starting work on an app (new or existing), create or open `apps/<slug>/PLAN.md`.
+
+### PLAN.md structure
+
+```markdown
+# <App name> — Plan
+
+## Goal
+One paragraph: what this app does and success criteria.
+
+## Phases
+
+### Phase 1 — <name>
+**Status:** not started | in progress | done
+
+- [ ] Step 1.1 — ...
+- [ ] Step 1.2 — ...
+
+### Phase 2 — <name>
+...
+```
+
+### Rules for plans and checklists
+
+1. **Plan before doing** — outline phases and steps in `PLAN.md` before implementation (scaffold, feature, fix, or publish).
+2. **Checklist per step** — every phase has concrete `- [ ]` items; one item = one verifiable outcome.
+3. **Update on every change** — when you start, edit, finish, or drop work:
+   - Mark items `[x]` when done
+   - Add new steps if scope grows
+   - Set phase **Status** (`not started` → `in progress` → `done`)
+   - Add a short **Changelog** section at the bottom with date + what changed (optional but recommended)
+4. **Keep in sync** — if code or manifest changes without updating `PLAN.md`, update the plan in the same session before considering the task complete.
+5. **English only** — same language rule as code and docs.
+
+Agents and contributors must read `PLAN.md` at the start of work on an app and update it before finishing.
+
+## Runtime type — pick the right one
+
+| | `hosted` | `iframe` |
+|---|----------|----------|
+| Host | Zip on Hub → `…/apps/{slug}/runtime/` | Publisher hosts SPA at `entry_url` (HTTPS) |
+| Storage | `localStorage` shim — **await `window.__APPHUB_STORAGE__?.ready`** before first read | Normal `localStorage`/`sessionStorage` on publisher origin |
+| Use when | Small tools, demos, no publisher HTTPS host | Full SPAs, auth, domain you control |
+
+**Required manifest fields:** `runtime_type`, `permissions[]`, `api_urls[]` (if backend exists).  
+For iframe, also: `entry_url`, optional `healthcheck_url`.
+
+## Hosted runtime — zip layout and troubleshooting
+
+Follow `audiences.publisher.hosted_runtime_troubleshooting` in the integration docs (schema `1.11.1+`). Summary for agents:
+
+### Zip contract (hosted register)
+
+- `manifest.json` **inside** the zip (at root or shallowest folder).
+- Entry file: `manifest.main` / `index.html` must exist in the zip.
+- Zip **build output only** (e.g. `dist/` contents) — never `node_modules`, `.cmd`, `.ps1`, or dev tooling.
+- Typical layout at zip root: `manifest.json`, `index.html`, `assets/*.js`, `assets/*.css`.
+- Max bundle size per integration docs (commonly ~50 MB).
+
+### JavaScript / ES modules
+
+- **ES modules are supported** (`<script type="module">`). Hashed names like `index-BmAhrHFo.js` come from **your bundler** (Vite), not a Hub-injected loader.
+- Hub **does not** remove `type="module"`. It rewrites `src`/`href` to append `launch_token`, injects the storage shim, and serves `.js` as `application/javascript`.
+- **`Cannot use import statement outside a module`** usually means a chunk returned **401, 404, or HTML** (browser runs error body as classic script), or `index.html` lost `type="module"`. Check DevTools Network: all `.js` → 200. **Not** a CSP `frame-ancestors` issue.
+
+### CSP `frame-ancestors 'self'`
+
+- Nested chain: product shell → Hub iframe → hosted runtime on API origin.
+- **Publishers cannot fix this in the zip.** Platform team must allow Hub and product origins (`APPHUB_ALLOWED_HUB_ORIGINS`, `APPHUB_ALLOWED_PRODUCT_ORIGINS`). Report framing errors with your Hub and product URLs.
+
+### Build tools (hosted)
+
+- **Vite 5/6** with `type="module"` and `base: './'` is the recommended path. Zip `dist/` + `manifest.json` at zip root.
+- IIFE builds are optional for debugging wiring only — not required for production.
+
+## Bridge — required integration
+
+### Connection flow
+
+1. User opens app → Hub calls `POST /apps/{slug}/launch` → `entry_url` + `launch_token` + `scopes_granted`
+2. App loads in a Hub window
+3. Listen for **`apphub:bridge:ready`** (or use `window.AppHubBridge`)
+4. UI uses `display_user`; **server auth** uses `GET bridge/user` from publisher backend
+
+### postMessage protocol (channel: `apphub:bridge`)
+
+| Direction | Event | Purpose |
+|-----------|-------|---------|
+| Parent → child | `apphub:bridge:ready` | Sends `context` (app_slug, launch_token, scopes_granted, display_user, …) |
+| Child → parent | `apphub:bridge:call` | `{ id, method, args }` |
+| Parent → child | `apphub:bridge:result` | `{ id, ok, result?, error? }` |
+
+**Bridge methods:** `requestPermission`, `sendDesktopMessage`, `setTaskbarBadge`, `reportError`  
+Copy/load `docs/sdk-stub.js` into your bundle or use `window.AppHubBridge`.
+
+### Permissions
+
+| Scope | Notes |
+|-------|-------|
+| `user.read` | User id + display name — granted at install |
+| `user.profile` | Avatar, locale, etc. — granted at install |
+| `desktop.notify` | For `POST bridge/notify` from **publisher backend** only |
+| `desktop.message` | Request via `requestPermission` during session |
+| `desktop.badge` | Request via `requestPermission` during session |
+
+### Two user data tiers — do not mix them up
+
+- **display_only** (`getDisplayUser()`, `display_user` on ready): greetings, UI labels — **not for auth**
+- **authoritative** (`GET bridge/user` or `POST verify-launch-token` on publisher server): authorization, audit, server-side API
+
+### launch_token — security
+
+- Short-lived secret; treat like a password
+- **Never** log, show in UI, or send to third parties
+- Publisher backend passes token to `GET bridge/user` (headers `X-AppHub-Launch-Token`, `X-AppHub-App-Slug`)
+
+### HTTP companion (publisher backend on `api_urls`)
+
+- `GET bridge/user` — scoped user snapshot (requires `user.read` on token)
+- `POST bridge/notify` — desktop notifications (requires `desktop.notify`)
+- `POST verify-launch-token` — one-time token verification; caller IP must match `api_urls`
+- App frontend calls **publisher backend proxy** — do not call Hub bridge HTTP directly from iframe
+
+## Deploy
+
+- **hosted:** `dist/` → zip + `manifest.json` → `POST /apps/register` (draft) → approval → store
+- **iframe:** manifest with `runtime_type: iframe` + `entry_url` → register JSON or drop manifest on Hub desktop
+- **local:** manifest on Hub desktop — private install, not listed in store
+
+Portal URL for upload and testing: **`hub_portal_url`** in `apphub.publisher.json` (local file, not committed).
+
+## i18n (en / vi) — required for UI
+
+- All user-visible strings via i18n; always ship `locales/en.json` and `locales/vi.json`
+- Sync locale with Hub when `user.profile` or bridge context provides it
+- No hardcoded UI text in components (use locale keys)
+
+## Dark / Light mode — required
+
+- Support both themes; use semantic CSS variables / design tokens
+- App must be usable in both modes inside Hub windows
+- Persist preference locally when running standalone
+
+## Code quality
+
+- Clean, maintainable code; clear module separation (UI / logic / API)
+- Prefer TypeScript; type bridge context, manifest, and API payloads
+- Handle denied permissions gracefully in UI
+- Never commit `.env`, `launch_token`, or secrets
+
+## Pre-publish checklist
+
+- [ ] `PLAN.md` updated — all completed steps marked, phases reflect current state
+- [ ] `manifest.json` has correct `runtime_type`, `permissions`, `api_urls`
+- [ ] Listens for `apphub:bridge:ready`; hosted: awaits `__APPHUB_STORAGE__.ready`
+- [ ] Server auth via publisher backend; never trust `display_user` for authorization
+- [ ] `launch_token` not exposed in client logs or UI
+- [ ] Full `en` + `vi` locale files; dark + light themes usable
+- [ ] Launch flow tested: `POST /apps/{slug}/launch` → app loads → bridge ready
+- [ ] `apphub.publisher.json` filled locally (file is gitignored — never commit real URLs)

@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Lockfiles (each publisher resolves deps locally)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lock
+bun.lockb
+
+# Build outputs (all apps)
+dist/
+build/
+out/
+.output/
+.nuxt/
+.next/
+.vite/
+*.tsbuildinfo
+
+# Hosted App Hub bundles (do not commit deploy zips)
+*.zip
+!**/docs/**/*.zip
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+.launch-token
+launch-token.txt
+
+# Logs and debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test and coverage
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Caches
+.cache/
+.turbo/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# OS and editor (keep .cursor/rules tracked)
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+*.sublime-*
+
+# Local tooling
+.vercel/
+.netlify/
+
+# Publisher instance URLs — never commit (may contain private Hub endpoints)
+apphub.publisher.json
