@@ -81,3 +81,8 @@ docs/upstream-issues/*/
 
 # Local git remote added by kit-pr (do not commit)
 kit-pr-fork
+
+# Integration-docs PR scratch (do not commit)
+_integration-docs-source.json
+_integration-docs-patched.json
+.packages-pr-worktree/

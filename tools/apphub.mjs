@@ -22,6 +22,7 @@ import {
 import { createInterface } from 'node:readline/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { cmdLaunch, cmdRegister, cmdTest } from './hub-commands.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const APPS_DIR = join(ROOT, 'apps');
@@ -345,7 +346,10 @@ App Hub publisher CLI
 Usage:
   npm run apphub                         Interactive menu
   npm run apphub -- list                 List apps in apps/
-  node tools/apphub.mjs release <slug>   Bump version, build, zip
+  npm run apphub -- test <slug>          Test launch + runtime assets (needs .apphub-token.local)
+  npm run apphub -- launch <slug>         Mint launch URL (smoke test)
+  npm run apphub -- register <slug>      Upload latest release zip to Hub
+  node tools/apphub.mjs release <slug>     Bump version, build, zip
 
 Release examples:
   node tools/apphub.mjs release <slug> 1.0.0 -y
@@ -386,6 +390,21 @@ async function main() {
 
   if (command === 'release') {
     await cmdRelease(slug, flags);
+    return;
+  }
+
+  if (command === 'test') {
+    await cmdTest(slug);
+    return;
+  }
+
+  if (command === 'launch') {
+    await cmdLaunch(slug);
+    return;
+  }
+
+  if (command === 'register') {
+    await cmdRegister(slug, flags);
     return;
   }
 

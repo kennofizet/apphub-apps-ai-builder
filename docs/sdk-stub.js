@@ -61,6 +61,9 @@
     setTaskbarBadge(count) {
       return call('setTaskbarBadge', [count]);
     },
+    saveFile(payload) {
+      return call('saveFile', [payload]);
+    },
     reportError(error) {
       const payload =
         typeof error === 'string'

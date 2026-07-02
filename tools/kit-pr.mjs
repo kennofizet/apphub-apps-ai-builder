@@ -12,6 +12,7 @@ import {
 
 const KIT_PR_DIR = join(ROOT, 'docs', 'upstream-kit-pr');
 const FORK_REMOTE = 'kit-pr-fork';
+const UPSTREAM_REMOTE = 'kit-pr-upstream';
 const DEFAULT_TITLE = 'feat: automatic upstream issue filing for AI agents';
 
 function git(args) {
@@ -141,16 +142,40 @@ function ensureForkRemote(cloneUrl) {
   }
 }
 
+function ensureUpstreamRemote(upstreamRepo) {
+  const url = `https://github.com/${upstreamRepo}.git`;
+  const remotes = git(['remote']).stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!remotes.includes(UPSTREAM_REMOTE)) {
+    const add = git(['remote', 'add', UPSTREAM_REMOTE, url]);
+    if (add.status !== 0) {
+      fail(`git remote add failed:\n${add.stderr || add.stdout}`);
+    }
+  } else {
+    git(['remote', 'set-url', UPSTREAM_REMOTE, url]);
+  }
+}
+
 function resolvePrBranch(localBranch, templateBranch) {
   if (templateBranch) return templateBranch;
   if (localBranch !== 'main') return localBranch;
   return 'kit-contribution/publisher-update';
 }
 
-function pushToFork(localBranch, remoteBranch, dryRun, forcePush = false) {
+function pushToFork(
+  localBranch,
+  remoteBranch,
+  upstreamRepo,
+  baseBranch,
+  dryRun,
+  forcePush = false
+) {
   if (dryRun) {
     log(
-      `[dry-run] Would build branch on fork/main and push as ${FORK_REMOTE}/${remoteBranch}`
+      `[dry-run] Would build branch on ${upstreamRepo} ${baseBranch} and push as ${FORK_REMOTE}/${remoteBranch}`
     );
     return;
   }
@@ -163,10 +188,10 @@ function pushToFork(localBranch, remoteBranch, dryRun, forcePush = false) {
   if (tracked.length === 0) fail('No tracked files to contribute.');
 
   const staging = `_kit_pr_${Date.now()}`;
-  const baseRef = `${FORK_REMOTE}/main`;
+  const baseRef = `${UPSTREAM_REMOTE}/${baseBranch}`;
 
-  log(`Fetching ${baseRef}…`);
-  const fetch = git(['fetch', FORK_REMOTE, 'main']);
+  log(`Fetching ${upstreamRepo} ${baseBranch}…`);
+  const fetch = git(['fetch', UPSTREAM_REMOTE, baseBranch]);
   if (fetch.status !== 0) {
     fail(`git fetch failed:\n${fetch.stderr || fetch.stdout}`);
   }
@@ -198,7 +223,7 @@ function pushToFork(localBranch, remoteBranch, dryRun, forcePush = false) {
   const commit = git([
     'commit',
     '-m',
-    'Publisher kit contribution (upstream report tooling)',
+    'Publisher kit contribution',
   ]);
   if (commit.status !== 0) {
     git(['checkout', localBranch]);
@@ -228,6 +253,20 @@ async function findOpenKitPr(token, upstreamRepo, head) {
   return pulls[0] ?? null;
 }
 
+async function syncKitPrDescription(token, upstreamRepo, pr, template) {
+  const [owner, repo] = upstreamRepo.split('/');
+  const needsUpdate = pr.title !== template.title || pr.body !== template.body;
+  if (!needsUpdate) {
+    log('PR title and body already match docs/upstream-kit-pr/.');
+    return pr;
+  }
+  log(`Syncing PR #${pr.number} description from docs/upstream-kit-pr/`);
+  return githubApi(token, 'PATCH', `/repos/${owner}/${repo}/pulls/${pr.number}`, {
+    title: template.title,
+    body: template.body,
+  });
+}
+
 export async function fileKitPr(token, config, options = {}) {
   const { dryRun = false, force = false, allowDirty = false } = options;
   const template = loadKitPrTemplate(config);
@@ -253,8 +292,11 @@ export async function fileKitPr(token, config, options = {}) {
 
   const existing = dryRun ? null : await findOpenKitPr(token, template.upstreamRepo, head);
 
-  if (!dryRun) ensureForkRemote(fork.cloneUrl);
-  pushToFork(branch, remoteBranch, dryRun, force);
+  if (!dryRun) {
+    ensureUpstreamRemote(template.upstreamRepo);
+    ensureForkRemote(fork.cloneUrl);
+  }
+  pushToFork(branch, remoteBranch, template.upstreamRepo, template.base, dryRun, force);
 
   if (dryRun) {
     log('[dry-run] Would create or update PR on GitHub.');
@@ -262,10 +304,11 @@ export async function fileKitPr(token, config, options = {}) {
   }
 
   if (existing) {
-    log(`Updated existing PR: ${existing.html_url}`);
+    const synced = await syncKitPrDescription(token, template.upstreamRepo, existing, template);
+    log(`Updated existing PR: ${synced.html_url}`);
     logData[logKey] = {
-      number: existing.number,
-      url: existing.html_url,
+      number: synced.number,
+      url: synced.html_url,
       filed_at: new Date().toISOString(),
       updated: true,
     };
