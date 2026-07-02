@@ -28,6 +28,10 @@ out/
 .env
 .env.*
 !.env.example
+.apphub-token.local
+.github-token.local
+.upstream-issues-log.json
+.upstream-report-log.json
 *.pem
 *.key
 secrets/
@@ -71,3 +75,9 @@ Desktop.ini
 
 # Publisher instance URLs — never commit (may contain private Hub endpoints)
 apphub.publisher.json
+
+# Upstream issue drafts (per publisher / AI session — not kit)
+docs/upstream-issues/*/
+
+# Local git remote added by kit-pr (do not commit)
+kit-pr-fork

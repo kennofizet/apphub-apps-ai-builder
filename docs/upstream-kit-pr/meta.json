@@ -1,0 +1,6 @@
+{
+  "title": "feat: automatic upstream issue filing for AI agents",
+  "base": "main",
+  "upstream_repo": "kennofizet/apphub-apps-ai-builder",
+  "pr_branch": "kit-contribution/upstream-report"
+}

@@ -15,6 +15,7 @@ This repository is a **publisher workspace**, not a pre-built app. Create apps u
 |-----|-------------------|--------------|
 | `integration_docs_url` | yes | Ask user for integration docs URL; wait until set in their local file |
 | `hub_portal_url` | yes | Ask user for portal URL when deploy or testing steps need it |
+| `upstream.auto_file_issues` | not `true` | Do **not** run `upstream-report` unless the user asks or passes `--yes` |
 
 **Never write real Hub URLs into tracked files** (README, rules, source, or git). URLs belong only in the gitignored `apphub.publisher.json`.
 
@@ -27,6 +28,9 @@ apphub.publisher.example.json   Tracked template (empty URLs)
 apphub.publisher.json           Local only — user's real URLs (gitignored)
 apps/<slug>/                    Apps you create
 tools/apphub.mjs                Release CLI
+tools/upstream-report.mjs       Optional — file issues + kit PR
+docs/upstream-issues/<tag>/     Issue templates (gitignored)
+docs/upstream-kit-pr/           Kit PR template (tracked)
 docs/sdk-stub.js                Bridge SDK
 ```
 
@@ -52,6 +56,17 @@ node tools/apphub.mjs release <slug> 1.0.0 -y
 - Zip `dist/` only; `manifest.json` at zip root.
 - `import outside a module` → often 401/404 on chunks; check Network.
 - `frame-ancestors` → platform CSP; not fixable in the zip.
+
+## Upstream reporting (optional)
+
+When integration-docs or Hub runtime blocks you and the fix is **platform-side** (not your app zip):
+
+1. Only auto-run when `upstream.auto_file_issues` is `true` in local config (Hub-injected), or the user explicitly asks.
+2. Add `docs/upstream-issues/<tag>/meta.json` + `body.md`. `meta.repo` must match `upstream.packages_repo` or `upstream.kit_repo`.
+3. Run `npm run upstream-report -- issue <tag>` (or `kit-pr` / `all`). Use `--yes` for a one-shot without enabling auto-file.
+4. Reply with issue/PR URLs — **never** ask the user to paste into GitHub manually.
+
+See `docs/upstream-issues/README.md` and `.cursor/rules/apphub-publisher.mdc`.
 
 ## New app checklist
 

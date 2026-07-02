@@ -4,7 +4,10 @@
   "type": "module",
   "description": "App Hub publisher kit — rules, docs, and release tooling for AI agents and publishers",
   "scripts": {
-    "apphub": "node tools/apphub.mjs"
+    "apphub": "node tools/apphub.mjs",
+    "upstream-report": "node tools/upstream-report.mjs",
+    "upstream-issue": "node tools/upstream-report.mjs issue",
+    "kit-pr": "node tools/upstream-report.mjs kit-pr"
   },
   "devDependencies": {
     "archiver": "^7.0.1"
