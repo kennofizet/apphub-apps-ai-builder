@@ -1,4 +1,10 @@
 {
   "integration_docs_url": "",
-  "hub_portal_url": ""
+  "hub_portal_url": "",
+  "upstream": {
+    "auto_file_issues": false,
+    "github_token_file": ".github-token.local",
+    "packages_repo": "kennofizet/apphub-packages",
+    "kit_repo": "kennofizet/apphub-apps-ai-builder"
+  }
 }

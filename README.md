@@ -33,6 +33,9 @@ Leave values empty until you have real URLs. Agents must **ask you** for these �
 | `AGENTS.md` | Agent onboarding |
 | `docs/sdk-stub.js` | Bridge SDK reference |
 | `tools/apphub.mjs` | Release CLI (list, build, zip) |
+| `tools/upstream-report.mjs` | File platform issues + kit PR (optional, no `gh` CLI) |
+| `docs/upstream-issues/` | Per-tag issue templates (gitignored) |
+| `docs/upstream-kit-pr/` | Kit PR template (tracked) |
 | `apps/` | Your apps (one folder per slug) |
 
 ## Setup
@@ -54,6 +57,35 @@ node tools/apphub.mjs release <slug> 1.0.0 -y
 
 Upload the zip from `apps/<slug>/release/` via your Hub (`POST /apps/register` for hosted apps).
 
+## Upstream reporting (optional)
+
+Report **platform/contract gaps** to upstream GitHub repos, or open a PR to the publisher kit — via REST API (no `gh` CLI).
+
+**Off by default** for public clones. Enable in `apphub.publisher.json`:
+
+```json
+"upstream": {
+  "auto_file_issues": true,
+  "packages_repo": "kennofizet/apphub-packages",
+  "kit_repo": "kennofizet/apphub-apps-ai-builder"
+}
+```
+
+Hub-connected workspaces may inject this block + a GitHub token automatically.
+
+```bash
+npm run upstream-report -- issue --list
+npm run upstream-report -- issue <tag>
+npm run upstream-report -- kit-pr --dry-run
+npm run upstream-report -- kit-pr
+```
+
+One-shot without enabling auto-file: add `--yes` to the command.
+
+See [docs/upstream-issues/README.md](docs/upstream-issues/README.md) and [docs/upstream-kit-pr/README.md](docs/upstream-kit-pr/README.md).
+
+**Auth:** `GITHUB_TOKEN` env → `.github-token.local` → git credential (same as `git push`).
+
 ## Official contract
 
 Fetch the URL in **`integration_docs_url`** from your local `apphub.publisher.json`. There is no default link in this repository.
@@ -64,5 +96,5 @@ Fetch the URL in **`integration_docs_url`** from your local `apphub.publisher.js
 2. Create and fill `apphub.publisher.json` (from the example file).
 3. Open in Cursor so the agent loads `.cursor/rules/apphub-publisher.mdc`.
 4. Create apps under `apps/<slug>/`.
-5. `node tools/apphub.mjs release <slug> <version> -y`
+5. `node tools/apphub.mjs release -y`
 6. Upload the zip to your Hub portal (`hub_portal_url`).

@@ -15,6 +15,10 @@ This repo is a **publisher kit** for **App Hub** (desktop host + app store). It 
 |-----|---------|
 | `integration_docs_url` | Machine-readable integration contract (JSON) from your App Hub operator |
 | `hub_portal_url` | Your App Hub portal (install, launch, store, upload) |
+| `upstream.auto_file_issues` | When `true`, agents may run `upstream-report` on platform gaps; default `false` for public clones |
+| `upstream.packages_repo` | Allowlisted repo for issue templates (e.g. `kennofizet/apphub-packages`) |
+| `upstream.kit_repo` | Allowlisted repo for kit PR + issue templates |
+| `upstream.github_token_file` | Path to gitignored PAT (default `.github-token.local`) |
 
 Setup after clone:
 
@@ -31,6 +35,7 @@ cp apphub.publisher.example.json apphub.publisher.json
 2. If `integration_docs_url` is **empty or missing**, **stop and ask the user** for their integration docs URL. Do not invent API hosts or paths.
 3. If `hub_portal_url` is **empty or missing**, ask the user for their App Hub portal URL when deploy, testing, or store steps are needed.
 4. When set, fetch `integration_docs_url` and treat it as the authoritative contract (`schema_version`, routes, bridge). HTTP paths in this rule file are **examples** — use `http.base_path` from the fetched docs.
+5. **Upstream report:** When you hit a **platform/contract gap** (not fixable in app code) — only if `upstream.auto_file_issues` is `true` in local config **or** the user explicitly requests it. Add `docs/upstream-issues/<tag>/meta.json` + `body.md` (`meta.repo` must be `upstream.packages_repo` or `upstream.kit_repo`). Run `npm run upstream-report -- issue <tag>` (or `kit-pr` / `all`). Use `--yes` for a one-shot when auto-file is off. **Do not** ask the user to open GitHub manually when auto-file is enabled. Auth: `GITHUB_TOKEN` env → `.github-token.local` → git credential. Issue tag folders are gitignored; kit PR template in `docs/upstream-kit-pr/`.
 
 **Official contract:** value of `integration_docs_url` in `apphub.publisher.json` only (not hardcoded in this repo).
 
