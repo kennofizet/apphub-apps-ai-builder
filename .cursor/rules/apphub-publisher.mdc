@@ -184,8 +184,10 @@ Follow `audiences.publisher.hosted_runtime_troubleshooting` in the integration d
 | Child → parent | `apphub:bridge:call` | `{ id, method, args }` |
 | Parent → child | `apphub:bridge:result` | `{ id, ok, result?, error? }` |
 
-**Bridge methods:** `requestPermission`, `sendDesktopMessage`, `setTaskbarBadge`, `reportError`  
+**Bridge methods:** `requestPermission`, `sendDesktopMessage`, `setTaskbarBadge`, `saveFile`, `reportError`  
 Copy/load `docs/sdk-stub.js` into your bundle or use `window.AppHubBridge`.
+
+Read `audiences.publisher.bridge.javascript_api` in the fetched integration docs for signatures — do not guess bridge methods.
 
 ### Permissions
 
@@ -196,6 +198,39 @@ Copy/load `docs/sdk-stub.js` into your bundle or use `window.AppHubBridge`.
 | `desktop.notify` | For `POST bridge/notify` from **publisher backend** only |
 | `desktop.message` | Request via `requestPermission` during session |
 | `desktop.badge` | Request via `requestPermission` during session |
+| `desktop.download` | **Hosted export** — declare in `manifest.permissions[]`; request at runtime; use `bridge.saveFile` (see below) |
+
+### Hosted file export / download (required reading for save features)
+
+**Do not** use `<a download>` or `URL.createObjectURL` alone in **hosted** runtimes — the opaque sandbox blocks normal browser downloads.
+
+**Correct pattern** (from integration docs `bridge.javascript_api.saveFile`):
+
+1. Add **`desktop.download`** to `manifest.json` `permissions[]`.
+2. Implement **`saveFile`** on your bridge stub (see `docs/sdk-stub.js`).
+3. On export: `await bridge.requestPermission('desktop.download')` then `await bridge.saveFile({ filename, mime, data })` where `data` is **base64 string** or **ArrayBuffer**.
+4. Use a **short timeout** (e.g. 5s) on bridge calls — missing Hub handlers otherwise hang ~30s.
+5. Fallback UI: copy image to clipboard, open blob in new tab, right-click preview — never only a hidden programmatic click.
+
+**Re-install** may be required after adding `desktop.download` to an already-installed app.
+
+### Hosted i18n — bundle locales, do not fetch
+
+`fetch('./locales/en.json')` from hosted JS often returns **401** (no `launch_token` on fetch; cookie not sent in opaque sandbox). **Import/bundle** `en.json` and `vi.json` into your JS bundle (Vite `import en from './locales/en.json'`).
+
+### Hosted UI — modals inside `.ps-app`
+
+CSS theme variables (`--ps-*`) are defined on `.ps-app`. Mount dialogs/toasts **inside** `#ps-app`, not `document.body`, or modals render unstyled.
+
+### Kit testing before publish
+
+From repo root (requires `apphub.publisher.json` + `.apphub-token.local`):
+
+```bash
+npm run apphub -- test <slug>      # launch + asset checks + contract hints
+npm run apphub -- register <slug>   # upload latest release zip
+npm run apphub -- launch <slug>     # smoke-test launch URL
+```
 
 ### Two user data tiers — do not mix them up
 
@@ -250,5 +285,7 @@ Portal URL for upload and testing: **`hub_portal_url`** in `apphub.publisher.jso
 - [ ] Server auth via publisher backend; never trust `display_user` for authorization
 - [ ] `launch_token` not exposed in client logs or UI
 - [ ] Full `en` + `vi` locale files; dark + light themes usable
-- [ ] Launch flow tested: `POST /apps/{slug}/launch` → app loads → bridge ready
+- [ ] Launch flow tested: `npm run apphub -- test <slug>` (or `launch <slug>`) → assets 200, locales bundled
+- [ ] Hosted export uses `desktop.download` + `bridge.saveFile` (not `<a download>` only)
+- [ ] Dialogs/overlays mounted inside `.ps-app` (theme CSS variables)
 - [ ] `apphub.publisher.json` filled locally (file is gitignored — never commit real URLs)

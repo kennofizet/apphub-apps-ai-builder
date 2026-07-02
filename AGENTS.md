@@ -27,7 +27,9 @@ App Hub may populate this file when the publisher links their instance.
 apphub.publisher.example.json   Tracked template (empty URLs)
 apphub.publisher.json           Local only — user's real URLs (gitignored)
 apps/<slug>/                    Apps you create
-tools/apphub.mjs                Release CLI
+tools/apphub.mjs                Release + test + register + launch CLI
+tools/hub-client.mjs            Hub API helpers (token, publisher config)
+tools/hub-commands.mjs          test / register / launch commands
 tools/upstream-report.mjs       Optional — file issues + kit PR
 docs/upstream-issues/<tag>/     Issue templates (gitignored)
 docs/upstream-kit-pr/           Kit PR template (tracked)
@@ -39,9 +41,20 @@ docs/sdk-stub.js                Bridge SDK
 - `runtime_type`: `hosted` (zip on Hub) or `iframe` (publisher `entry_url`).
 - **Hosted:** `await window.__APPHUB_STORAGE__?.ready`; zip `dist/` with `manifest.json` at root.
 - **Bridge:** `apphub:bridge:ready`; `display_user` for UI only; server auth via `GET bridge/user`.
-- **i18n:** `locales/en.json` + `locales/vi.json`.
+- **i18n:** `locales/en.json` + `locales/vi.json` — **bundle into JS for hosted** (do not `fetch('./locales/…')` at runtime).
 - **Themes:** dark + light via CSS variables.
+- **Export (hosted):** `desktop.download` in manifest + `bridge.saveFile` — see rules.
 - **PLAN.md** per app, updated every session.
+
+## Test and deploy (local Hub)
+
+Requires `apphub.publisher.json` and `.apphub-token.local` (from Hub → Copy token for AI).
+
+```bash
+npm run apphub -- test <slug>       # launch, check JS/CSS, locale + download hints
+npm run apphub -- register <slug>   # upload latest apps/<slug>/release/*.zip
+npm run apphub -- launch <slug>     # smoke-test launch URL
+```
 
 ## Release
 

@@ -32,11 +32,16 @@ Leave values empty until you have real URLs. Agents must **ask you** for these �
 | `.cursor/rules/apphub-publisher.mdc` | Project rules |
 | `AGENTS.md` | Agent onboarding |
 | `docs/sdk-stub.js` | Bridge SDK reference |
-| `tools/apphub.mjs` | Release CLI (list, build, zip) |
+| `tools/apphub.mjs` | Release CLI (list, build, zip, **test**, **register**, **launch**) |
 | `tools/upstream-report.mjs` | File platform issues + kit PR (optional, no `gh` CLI) |
 | `docs/upstream-issues/` | Per-tag issue templates (gitignored) |
 | `docs/upstream-kit-pr/` | Kit PR template (tracked) |
+| `docs/upstream-packages-pr/` | Packages PR description template |
+| `tools/patch-integration-docs.mjs` | Build integration-docs patch for packages PR |
+| `tools/packages-pr.mjs` | Open PR to `upstream.packages_repo` (integration-docs) |
 | `apps/` | Your apps (one folder per slug) |
+
+**Publisher apps stay local by default.** `apps/.gitignore` ignores `apps/*` so sample apps in your workspace are not pushed to the official kit fork. To track an app in git, remove or override that ignore in your fork.
 
 ## Setup
 
@@ -52,10 +57,12 @@ After an app exists in `apps/<slug>/`:
 
 ```bash
 npm run apphub -- list
+npm run apphub -- test <slug>        # before upload — checks launch + runtime assets
 node tools/apphub.mjs release <slug> 1.0.0 -y
+npm run apphub -- register <slug>    # upload zip (needs .apphub-token.local)
 ```
 
-Upload the zip from `apps/<slug>/release/` via your Hub (`POST /apps/register` for hosted apps).
+Upload manually or via `register`. Zip path: `apps/<slug>/release/`.
 
 ## Upstream reporting (optional)
 
@@ -83,6 +90,15 @@ npm run upstream-report -- kit-pr
 One-shot without enabling auto-file: add `--yes` to the command.
 
 See [docs/upstream-issues/README.md](docs/upstream-issues/README.md) and [docs/upstream-kit-pr/README.md](docs/upstream-kit-pr/README.md).
+
+### Kit PR vs packages PR
+
+| Tool | Target repo | When to use |
+|------|-------------|-------------|
+| `npm run upstream-report -- kit-pr` | `upstream.kit_repo` | Contribute changes to **this publisher kit** (rules, CLI, docs) |
+| `node tools/packages-pr.mjs` | `upstream.packages_repo` | Propose **integration-docs.json** updates on the Hub platform repo |
+
+Packages flow: fetch current docs into `_integration-docs-source.json`, run `node tools/patch-integration-docs.mjs`, then `node tools/packages-pr.mjs`. Templates: `docs/upstream-packages-pr/`.
 
 **Auth:** `GITHUB_TOKEN` env → `.github-token.local` → git credential (same as `git push`).
 

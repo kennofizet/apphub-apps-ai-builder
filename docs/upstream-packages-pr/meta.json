@@ -1,0 +1,6 @@
+{
+  "title": "docs(integration): hosted i18n, file export, and contract-only publisher guide",
+  "base": "main",
+  "upstream_repo": "kennofizet/apphub-packages",
+  "pr_branch": "publisher/integration-docs-hosted-i18n-export"
+}

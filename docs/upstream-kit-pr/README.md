@@ -1,25 +1,43 @@
-# Kit PR template
+# Upstream PR templates
 
-Tracked template for `npm run upstream-report -- kit-pr` (opens a PR to the official publisher kit).
+Each template describes **only that upstream repo**. Do not cross-reference other repositories in PR bodies.
+
+## Publisher kit PR
+
+For `npm run upstream-report -- kit-pr` → `upstream.kit_repo` (default `kennofizet/apphub-apps-ai-builder`).
 
 ```
 docs/upstream-kit-pr/
-  meta.json    title, base branch, upstream_repo (optional override)
-  body.md      PR description (Markdown)
+  meta.json    title, base branch, pr_branch, upstream_repo (optional)
+  body.md      PR description — kit changes only
 ```
 
-## Defaults
+## App Hub packages PR
 
-- **Upstream repo:** `apphub.publisher.json` → `upstream.kit_repo` (default `kennofizet/apphub-apps-ai-builder`)
-- **Head:** your GitHub fork of `upstream.kit_repo` + current branch (tool creates fork if needed, remote `kit-pr-fork`)
-- **Dedup:** `.upstream-report-log.json` + open PR search on GitHub
+For `node tools/packages-pr.mjs` → `upstream.packages_repo` (default `kennofizet/apphub-packages`).
+
+```
+docs/upstream-packages-pr/
+  meta.json    title, base branch, pr_branch, upstream_repo (optional)
+  body.md      PR description — integration-docs.json changes only
+```
+
+Patch source: `tools/patch-integration-docs.mjs` → `_integration-docs-patched.json` (gitignored scratch).
+
+## Publisher config
+
+`apphub.publisher.json` (gitignored locally):
+
+| Key | Purpose |
+|-----|---------|
+| `upstream.kit_repo` | Target for `kit-pr` |
+| `upstream.packages_repo` | Target for `packages-pr.mjs` and `upstream-report issue` |
+
+Example defaults in `apphub.publisher.example.json`.
 
 ## Commands
 
 ```bash
-npm run upstream-report -- kit-pr --dry-run   # plan only
-npm run upstream-report -- kit-pr             # git push + open PR
-npm run upstream-report -- all                # file all issues + kit PR
+node tools/upstream-report.mjs kit-pr --yes    # kit repo PR
+node tools/packages-pr.mjs                     # packages repo PR
 ```
-
-Requires a committed branch and GitHub token with pull request access.

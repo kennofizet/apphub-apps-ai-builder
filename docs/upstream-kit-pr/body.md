@@ -1,27 +1,20 @@
 ## Summary
 
-- Add `tools/upstream-report.mjs` — unified CLI for platform issues + kit PR (no `gh` CLI)
-- Add `tools/file-upstream-issue.mjs` / `upstream-issues` — file GitHub issues via REST API
-- Add `docs/upstream-issues/README.md` — per-tag templates (`<tag>/meta.json` + `body.md`); tag folders gitignored
-- Add `docs/upstream-kit-pr/` — tracked PR template for contributing back to this kit
-- Add `docs/hub-frontend-ai-prompt-addon.md` — snippet for Hub operators
-- Extend `apphub.publisher.example.json` with optional `upstream` block
-- Update `AGENTS.md` and `.cursor/rules/apphub-publisher.mdc` — agents auto-report platform gaps
-
-**Auth:** `GITHUB_TOKEN` env → `.github-token.local` → git credential (same as `git push`).
-
-**Dedup:** `.upstream-report-log.json` (gitignored) + GitHub open-issue/PR search.
+- **`tools/hub-client.mjs`** + **`tools/hub-commands.mjs`** — `test`, `launch`, `register` Hub commands (no `gh` CLI)
+- **`npm run apphub -- test <slug>`** — launch smoke test; checks JS/CSS 200; warns on runtime locale fetch and missing `desktop.download` in manifest
+- **`.cursor/rules/apphub-publisher.mdc`** — hosted export (`saveFile` + `desktop.download`), bundle i18n (no `fetch('./locales/')`), mount modals inside the app root (theme CSS variables)
+- **`docs/sdk-stub.js`** — add `saveFile` bridge method (align with integration-docs `javascript_api`)
+- **`AGENTS.md`**, **`README.md`** — document test/deploy workflow
+- **`apps/.gitignore`** — ignore publisher apps under `apps/*` by default (keep kit lean)
 
 ## Motivation
 
-When publishers hit platform/contract gaps, AI agents should file upstream issues and kit PRs automatically — not ask the user to open github.com manually.
+Agents and publishers need local test tooling and rules that match the hosted runtime contract (export, i18n, bridge). Previously the kit omitted `saveFile` in the SDK stub and had no `apphub test` command.
 
 ## Test plan
 
 - [ ] `npm install` at repo root
-- [ ] Create `docs/upstream-issues/<tag>/meta.json` + `body.md` locally (gitignored)
-- [ ] `npm run upstream-report -- issue --list`
-- [ ] `npm run upstream-report -- issue <tag>`
-- [ ] `npm run upstream-report -- kit-pr --dry-run`
-- [ ] `npm run upstream-report -- kit-pr` (after commit + push)
-- [ ] Confirm secrets and issue drafts are not tracked
+- [ ] `cp apphub.publisher.example.json apphub.publisher.json` + Hub URLs + `.apphub-token.local`
+- [ ] `npm run apphub -- test <slug>` on a hosted app with `dist/` built
+- [ ] `npm run apphub -- register <slug>` uploads latest release zip
+- [ ] `docs/sdk-stub.js` exports `saveFile`
