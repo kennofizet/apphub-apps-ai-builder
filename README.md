@@ -33,6 +33,7 @@ Leave values empty until you have real URLs. Agents must **ask you** for these �
 | `AGENTS.md` | Agent onboarding |
 | `docs/sdk-stub.js` | Bridge SDK reference |
 | `tools/apphub.mjs` | Release CLI (list, build, zip, **test**, **register**, **launch**) |
+| `tools/test-harness/` | **E2E test harness** — dev/user accounts, demo seed, action logs (see below) |
 | `tools/upstream-report.mjs` | File platform issues + kit PR (optional, no `gh` CLI) |
 | `docs/upstream-issues/` | Per-tag issue templates (gitignored) |
 | `docs/upstream-kit-pr/` | Kit PR template (tracked) |
@@ -43,6 +44,8 @@ Leave values empty until you have real URLs. Agents must **ask you** for these �
 
 **Publisher apps stay local by default.** `apps/.gitignore` ignores `apps/*` so sample apps in your workspace are not pushed to the official kit fork. To track an app in git, remove or override that ignore in your fork.
 
+**Sandbox harness** (`apps/<slug>/tests/sandbox-apphub/`) is **gitignored** — copy `tools/test-harness/templates/app-tests/` per app. You may commit other files under `apps/<slug>/tests/` (unit tests, mocks). Keep `apphub.test.json` local (see test harness).
+
 ## Setup
 
 ```bash
@@ -51,18 +54,40 @@ cp apphub.publisher.example.json apphub.publisher.json
 # Edit apphub.publisher.json with your Hub URLs
 ```
 
+Root `npm install` also installs harness dependencies under `tools/test-harness/` (Playwright is optional — see test harness README).
+
 ## Release tooling
 
 After an app exists in `apps/<slug>/`:
 
 ```bash
 npm run apphub -- list
-npm run apphub -- test <slug>        # before upload — checks launch + runtime assets
+npm run apphub -- test <slug>        # quick smoke — launch + runtime assets (no sandbox stack)
 node tools/apphub.mjs release <slug> 1.0.0 -y
 npm run apphub -- register <slug>    # upload zip (needs .apphub-token.local)
 ```
 
 Upload manually or via `register`. Zip path: `apps/<slug>/release/`.
+
+## Test harness (optional — full local E2E)
+
+**Quick smoke (default):** `npm run apphub -- test <slug>` against your real Hub — no PHP/MySQL stack.
+
+**Full E2E (optional):** when you want dev/user accounts, dual-account checks, and per-feature Playwright cases, set up the harness:
+
+```bash
+cp apphub.test.example.json apphub.test.json
+cd tools/test-harness && npm install   # also run by root postinstall; Playwright optional
+npm run test:harness -- stack install
+npm run test:harness -- stack update    # when upstream packages change
+npm run test:harness -- stack up
+# another terminal:
+npm run test:harness -- check
+npm run test:harness -- seed
+npm run test:harness -- run smoke
+```
+
+See [tools/test-harness/README.md](tools/test-harness/README.md).
 
 ## Upstream reporting (optional)
 

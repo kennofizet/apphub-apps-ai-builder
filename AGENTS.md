@@ -30,6 +30,7 @@ apps/<slug>/                    Apps you create
 tools/apphub.mjs                Release + test + register + launch CLI
 tools/hub-client.mjs            Hub API helpers (token, publisher config)
 tools/hub-commands.mjs          test / register / launch commands
+tools/test-harness/             E2E harness — dev/user accounts, demo seed, JSONL logs
 tools/upstream-report.mjs       Optional — file issues + kit PR
 docs/upstream-issues/<tag>/     Issue templates (gitignored)
 docs/upstream-kit-pr/           Kit PR template (tracked)
@@ -45,16 +46,37 @@ docs/sdk-stub.js                Bridge SDK
 - **Themes:** dark + light via CSS variables.
 - **Export (hosted):** `desktop.download` in manifest + `bridge.saveFile` — see rules.
 - **PLAN.md** per app, updated every session.
+- **`apps/<slug>/tests/sandbox-apphub/`** — one `.mjs` case per feature; **required before deploy** (see rules). **Gitignored** — copy `tools/test-harness/templates/app-tests/`. Other files under `apps/<slug>/tests/` (unit tests, etc.) may be committed if you track the app.
 
 ## Test and deploy (local Hub)
 
 Requires `apphub.publisher.json` and `.apphub-token.local` (from Hub → Copy token for AI).
 
+**Quick smoke:** `npm run apphub -- test <slug>` — always available; no sandbox stack.
+
+**Full gate (when using the harness):** run `pre-deploy` before register if `apphub.test.json` exists and the user has not asked to skip the sandbox.
+
 ```bash
-npm run apphub -- test <slug>       # launch, check JS/CSS, locale + download hints
-npm run apphub -- register <slug>   # upload latest apps/<slug>/release/*.zip
+npm run apphub -- test <slug>       # quick asset smoke (production config)
+npm run apphub -- register <slug>   # upload zip — run pre-deploy first when harness is set up
 npm run apphub -- launch <slug>     # smoke-test launch URL
 ```
+
+Skip harness: user may say "skip sandbox" / "deploy without harness", or has no `apphub.test.json` and confirms production-only deploy.
+
+## Test harness (isolated)
+
+Use `apphub.test.json` (not `apphub.publisher.json`) for multi-account E2E. Blocks non-local URLs by default.
+
+```bash
+npm run test:harness -- run pre-deploy --slug video-review   # full gate before deploy
+npm run test:harness -- run app video-review --case upload # single feature after a save
+npm run test:harness -- list app video-review
+npm run test:harness -- check
+npm run test:harness -- logs --tail 50
+```
+
+See `tools/test-harness/README.md`.
 
 ## Release
 

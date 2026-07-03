@@ -28,6 +28,7 @@ out/
 .env
 .env.*
 !.env.example
+!tools/test-harness/stack/host-overlay/.env.sandbox
 .apphub-token.local
 .github-token.local
 .upstream-issues-log.json
@@ -72,6 +73,18 @@ Desktop.ini
 # Local tooling
 .vercel/
 .netlify/
+
+# Test harness (isolated from production publisher config)
+apphub.test.json
+.apphub-token.dev.local
+.apphub-token.user.local
+logs/test-harness/
+tools/test-harness/stack/hub-frontend/
+tools/test-harness/stack/hub-backend/
+tools/test-harness/stack/data/
+
+# Per-app App Hub sandbox harness (copy from tools/test-harness/templates/app-tests/)
+apps/*/tests/sandbox-apphub/
 
 # Publisher instance URLs — never commit (may contain private Hub endpoints)
 apphub.publisher.json

@@ -1,0 +1,16 @@
+{
+  "name": "@apphub/test-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Isolated App Hub E2E test harness — sandbox stack, dev/user accounts, action logs",
+  "scripts": {
+    "harness": "node cli.mjs"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.51.0"
+  }
+}
