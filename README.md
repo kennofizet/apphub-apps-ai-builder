@@ -33,6 +33,7 @@ Leave values empty until you have real URLs. Agents must **ask you** for these â
 | `AGENTS.md` | Agent onboarding |
 | `docs/sdk-stub.js` | Bridge SDK reference |
 | `tools/apphub.mjs` | Release CLI (list, build, zip, **test**, **register**, **launch**) |
+| `tools/test-harness/` | **E2E test harness** â€” dev/user accounts, demo seed, action logs (see below) |
 | `tools/upstream-report.mjs` | File platform issues + kit PR (optional, no `gh` CLI) |
 | `docs/upstream-issues/` | Per-tag issue templates (gitignored) |
 | `docs/upstream-kit-pr/` | Kit PR template (tracked) |
@@ -42,6 +43,8 @@ Leave values empty until you have real URLs. Agents must **ask you** for these â
 | `apps/` | Your apps (one folder per slug) |
 
 **Publisher apps stay local by default.** `apps/.gitignore` ignores `apps/*` so sample apps in your workspace are not pushed to the official kit fork. To track an app in git, remove or override that ignore in your fork.
+
+**Sandbox harness** (`apps/<slug>/tests/sandbox-apphub/`) is **gitignored** â€” copy `tools/test-harness/templates/app-tests/` per app. You may commit other files under `apps/<slug>/tests/` (unit tests, mocks). Keep `apphub.test.json` local (see test harness).
 
 ## Setup
 
@@ -63,6 +66,23 @@ npm run apphub -- register <slug>    # upload zip (needs .apphub-token.local)
 ```
 
 Upload manually or via `register`. Zip path: `apps/<slug>/release/`.
+
+## Test harness (local / staging only)
+
+`npm run apphub -- test` is a quick smoke check. For **full local stack** (real `apphub-backend` + `@kennofizet/apphub-frontend`, dev/user tokens, JSONL logs):
+
+```bash
+cp apphub.test.example.json apphub.test.json
+npm run test:harness -- stack install
+npm run test:harness -- stack update    # when upstream packages change
+npm run test:harness -- stack up
+# another terminal:
+npm run test:harness -- check
+npm run test:harness -- seed
+npm run test:harness -- run smoke
+```
+
+See [tools/test-harness/README.md](tools/test-harness/README.md).
 
 ## Upstream reporting (optional)
 

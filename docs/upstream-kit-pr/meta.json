@@ -1,6 +1,6 @@
 {
-  "title": "feat: Hub test CLI, hosted i18n/export rules, saveFile in SDK stub",
+  "title": "feat: isolated test harness with sandbox Hub stack and action logs",
   "base": "main",
   "upstream_repo": "kennofizet/apphub-apps-ai-builder",
-  "pr_branch": "kit-contribution/hub-test-hosted-docs"
+  "pr_branch": "kit-contribution/test-harness-sandbox"
 }

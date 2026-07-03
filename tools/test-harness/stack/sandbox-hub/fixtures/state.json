@@ -1,0 +1,21 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "dev@test.local",
+      "name": "Dev Publisher",
+      "role": "dev",
+      "token": "sandbox-dev-token",
+      "is_dev": true
+    },
+    {
+      "id": 2,
+      "email": "user@test.local",
+      "name": "Normal User",
+      "role": "user",
+      "token": "sandbox-user-token",
+      "is_dev": false
+    }
+  ],
+  "apps": []
+}

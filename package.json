@@ -5,6 +5,7 @@
   "description": "App Hub publisher kit — rules, docs, and release tooling for AI agents and publishers",
   "scripts": {
     "apphub": "node tools/apphub.mjs",
+    "test:harness": "node tools/test-harness/cli.mjs",
     "upstream-report": "node tools/upstream-report.mjs",
     "upstream-issue": "node tools/upstream-report.mjs issue",
     "kit-pr": "node tools/upstream-report.mjs kit-pr"

@@ -1,3 +1,5 @@
+# Publisher apps stay local (override in your fork to track apps/<slug>/ source).
+# App Hub harness only: apps/*/tests/sandbox-apphub/ is gitignored at repo root.
 *
 !.gitkeep
 !.gitignore

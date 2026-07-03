@@ -1,0 +1,33 @@
+{
+  "hub_api_base": "http://127.0.0.1:8790/api/knf/apphub",
+  "hub_portal_url": "http://127.0.0.1:5173",
+  "allow_production": false,
+  "stack": {
+    "mode": "sandbox",
+    "backend": "real",
+    "backend_port": 8790,
+    "frontend_port": 5173,
+    "api_prefix": "/api/knf/apphub",
+    "frontend_repo": "https://github.com/kennofizet/apphub-host-starter.git"
+  },
+  "tokens": {
+    "dev": ".apphub-token.dev.local",
+    "user": ".apphub-token.user.local",
+    "publisher_fallback": ".apphub-token.local"
+  },
+  "demo": {
+    "apps": [],
+    "auto_register": true,
+    "auto_build_release": false
+  },
+  "logging": {
+    "dir": "logs/test-harness",
+    "console": true,
+    "jsonl": true
+  },
+  "playwright": {
+    "enabled": false,
+    "headless": true,
+    "timeout_ms": 30000
+  }
+}

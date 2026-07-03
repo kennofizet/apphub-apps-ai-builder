@@ -58,6 +58,11 @@ Do not add Vietnamese (or other language) prose in code, docs, or rules. Vietnam
 ```
 apps/<slug>/
   PLAN.md          # living plan + per-step checklists (required)
+  tests/           # optional — your unit/integration tests (commit if you track the app)
+    sandbox-apphub/  # App Hub pre-deploy harness (gitignored — copy template)
+      manifest.json
+      cases/         # one .mjs per user action / save path
+      fixtures/      # e.g. sample.mp4 — not committed
   src/
     components/
     modules/       # api, stores, composables
@@ -82,6 +87,8 @@ Maintain **one** `.gitignore` at the **repo root**. Do not duplicate per app unl
 | Secrets | `.env`, `.env.*` (allow `!.env.example`), `*.pem`, `*.key`, `secrets/`, launch-token files |
 | Logs | `logs/`, `*.log`, `*-debug.log*` |
 | Test/coverage | `coverage/`, `.nyc_output/`, `playwright-report/`, `test-results/` |
+| Sandbox app tests | `apps/*/tests/sandbox-apphub/` (harness cases + fixtures; template in `tools/test-harness/templates/app-tests/`) |
+| Sandbox Hub config | `apphub.test.json`, `.apphub-token.dev.local`, `.apphub-token.user.local`, `logs/test-harness/`, `tools/test-harness/stack/hub-frontend/`, `tools/test-harness/stack/hub-backend/` |
 | Caches | `.cache/`, `.turbo/`, `.parcel-cache/`, `.eslintcache`, `.stylelintcache` |
 | OS/editor junk | `.DS_Store`, `Thumbs.db`, `.idea/`, swap files — **do not** ignore `.cursor/rules/` |
 | Hosting metadata | `.vercel/`, `.netlify/` |
@@ -258,6 +265,47 @@ npm run apphub -- launch <slug>     # smoke-test launch URL
 
 Portal URL for upload and testing: **`hub_portal_url`** in `apphub.publisher.json` (local file, not committed).
 
+## Pre-deploy sandbox testing (required)
+
+**Never register or deploy to production Hub until the full local sandbox gate passes.**
+
+Use `apphub.test.json` + `npm run test:harness` (not `apphub.publisher.json`). Stack must use real packages when possible (`stack.backend: "real"`).
+
+### Gate command (run before every register/deploy)
+
+```bash
+npm run test:harness -- stack up          # if not already running
+npm run test:harness -- run pre-deploy --slug <slug>
+```
+
+`pre-deploy` runs: API health → register/launch → dual-account → **all** `apps/<slug>/tests/sandbox-apphub/cases/*.mjs`.
+
+### Per-feature test files (required per app)
+
+Each meaningful user action gets **one case file** under `apps/<slug>/tests/sandbox-apphub/cases/`:
+
+| Example file | What it verifies |
+|--------------|------------------|
+| `01-launch.mjs` | `POST /launch`, runtime `index.html` 200 |
+| `03-upload.mjs` | File picker + upload path (Playwright) |
+| `04-comment.mjs` | Add/save comment (Playwright) |
+| `05-export.mjs` | Export / `bridge.saveFile` (Playwright) |
+
+Register cases in `apps/<slug>/tests/sandbox-apphub/manifest.json`. **Copy** template from `tools/test-harness/templates/app-tests/` — only `sandbox-apphub/` is **gitignored**; you may add your own tests alongside under `apps/<slug>/tests/` (unit tests, mocks, etc.).
+
+```bash
+npm run test:harness -- list app <slug>
+npm run test:harness -- run app <slug>              # all cases
+npm run test:harness -- run app <slug> --case upload  # one case after a code change
+```
+
+- **API cases** (`type: "api"`) — always run; no browser.
+- **Playwright cases** (`type: "playwright"`) — set `playwright.enabled: true` in `apphub.test.json`; skip gracefully when off.
+
+When adding a feature, add or update a case file **in the same session** before marking `PLAN.md` done.
+
+Agents: **block** `npm run apphub -- register` / production deploy steps until `pre-deploy` passes for that slug.
+
 ## i18n (en / vi) — required for UI
 
 - All user-visible strings via i18n; always ship `locales/en.json` and `locales/vi.json`
@@ -280,6 +328,8 @@ Portal URL for upload and testing: **`hub_portal_url`** in `apphub.publisher.jso
 ## Pre-publish checklist
 
 - [ ] `PLAN.md` updated — all completed steps marked, phases reflect current state
+- [ ] `apps/<slug>/tests/sandbox-apphub/manifest.json` + case files for each major user action (local/gitignored — copy template)
+- [ ] **Sandbox gate passed:** `npm run test:harness -- run pre-deploy --slug <slug>` (local stack, JSONL logs)
 - [ ] `manifest.json` has correct `runtime_type`, `permissions`, `api_urls`
 - [ ] Listens for `apphub:bridge:ready`; hosted: awaits `__APPHUB_STORAGE__.ready`
 - [ ] Server auth via publisher backend; never trust `display_user` for authorization

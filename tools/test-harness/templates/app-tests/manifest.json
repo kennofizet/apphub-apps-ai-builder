@@ -1,0 +1,7 @@
+{
+  "slug": "<app-slug>",
+  "cases": [
+    { "id": "launch", "file": "01-launch.mjs", "title": "Launch + index.html", "type": "api" },
+    { "id": "my-feature", "file": "02-my-feature.mjs", "title": "Describe user action", "type": "playwright" }
+  ]
+}

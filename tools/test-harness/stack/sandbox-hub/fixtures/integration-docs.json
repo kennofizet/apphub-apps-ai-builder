@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.13.0",
+  "http": {
+    "base_path": "/api/knf/apphub"
+  },
+  "audiences": {
+    "publisher": {
+      "bridge": {
+        "javascript_api": {
+          "saveFile": {
+            "signature": "saveFile({ filename, mime, data })",
+            "requires": ["desktop.download"]
+          }
+        }
+      },
+      "runtime_types": {
+        "hosted": {
+          "summary": "Zip bundle on sandbox Hub (test harness only)."
+        }
+      }
+    }
+  }
+}
