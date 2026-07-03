@@ -1,5 +1,5 @@
 {
-  "title": "feat: isolated test harness with sandbox Hub stack and action logs",
+  "title": "feat: test harness with real sandbox stack, pre-deploy gate, and per-app cases",
   "base": "main",
   "upstream_repo": "kennofizet/apphub-apps-ai-builder",
   "pr_branch": "kit-contribution/test-harness-sandbox"
