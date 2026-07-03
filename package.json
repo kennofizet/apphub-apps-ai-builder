@@ -8,7 +8,8 @@
     "test:harness": "node tools/test-harness/cli.mjs",
     "upstream-report": "node tools/upstream-report.mjs",
     "upstream-issue": "node tools/upstream-report.mjs issue",
-    "kit-pr": "node tools/upstream-report.mjs kit-pr"
+    "kit-pr": "node tools/upstream-report.mjs kit-pr",
+    "postinstall": "npm install --prefix tools/test-harness --omit=optional"
   },
   "devDependencies": {
     "archiver": "^7.0.1"

@@ -52,13 +52,17 @@ docs/sdk-stub.js                Bridge SDK
 
 Requires `apphub.publisher.json` and `.apphub-token.local` (from Hub → Copy token for AI).
 
-**Deploy order:** sandbox `pre-deploy` first → then production register.
+**Quick smoke:** `npm run apphub -- test <slug>` — always available; no sandbox stack.
+
+**Full gate (when using the harness):** run `pre-deploy` before register if `apphub.test.json` exists and the user has not asked to skip the sandbox.
 
 ```bash
 npm run apphub -- test <slug>       # quick asset smoke (production config)
-npm run apphub -- register <slug>   # upload latest apps/<slug>/release/*.zip — only after pre-deploy
+npm run apphub -- register <slug>   # upload zip — run pre-deploy first when harness is set up
 npm run apphub -- launch <slug>     # smoke-test launch URL
 ```
+
+Skip harness: user may say "skip sandbox" / "deploy without harness", or has no `apphub.test.json` and confirms production-only deploy.
 
 ## Test harness (isolated)
 

@@ -3,7 +3,7 @@
 - **`tools/test-harness/`** — isolated E2E module (uses `apphub.test.json`, not production `apphub.publisher.json`)
 - **Sandbox stack** — real `kennofizet/apphub-backend` + `@kennofizet/apphub-frontend` (Laravel + hub-host-starter on `:8790` / `:5173`); optional Node mock API when PHP unavailable
 - **`apphub.test.example.json`** — test config template; blocks non-local production URLs unless `allow_production: true`
-- **Pre-deploy gate** — `npm run test:harness -- run pre-deploy --slug <slug>` before `apphub register`
+- **Pre-deploy gate** — `npm run test:harness -- run pre-deploy --slug <slug>` before register when the harness is set up (optional if user skips sandbox or has no `apphub.test.json`)
 - **Per-app feature tests** — `apps/<slug>/tests/sandbox-apphub/` (gitignored); kit template in `tools/test-harness/templates/app-tests/`
 - **JSONL action logs** per session (`logs/test-harness/<id>/actions.jsonl`)
 - **Scenarios** — `smoke`, `launch-all`, `publisher-flow`, `dual-account`, `portal-smoke`, `pre-deploy`
@@ -18,9 +18,9 @@
 3. **Real packages** — same backend/frontend stack as production when possible
 4. **Per-feature cases** — one Playwright/API script per user action (upload, export, …)
 5. **Per-action logs** — timestamped JSONL for debugging agent runs
-6. **Deploy gate** — sandbox must pass before register/deploy
+6. **Deploy gate** — sandbox `pre-deploy` when harness is in use; quick smoke remains `npm run apphub -- test`
 
-Operators with a real local Hub can point `apphub.test.json` at their instance (`stack.mode: external`).
+Operators with a real local Hub can point `apphub.test.json` at their instance (`stack.mode: external`). Casual clones may register after `apphub -- test` only if they opt out of the full stack.
 
 ## Test plan
 

@@ -265,11 +265,14 @@ npm run apphub -- launch <slug>     # smoke-test launch URL
 
 Portal URL for upload and testing: **`hub_portal_url`** in `apphub.publisher.json` (local file, not committed).
 
-## Pre-deploy sandbox testing (required)
+## Pre-deploy sandbox testing (recommended)
 
-**Never register or deploy to production Hub until the full local sandbox gate passes.**
+**Run the full sandbox gate before register/deploy when the harness is in use** — not required for every clone.
 
-Use `apphub.test.json` + `npm run test:harness` (not `apphub.publisher.json`). Stack must use real packages when possible (`stack.backend: "real"`).
+- **Quick smoke (no stack):** `npm run apphub -- test <slug>` using `apphub.publisher.json`.
+- **Full E2E:** `apphub.test.json` + `npm run test:harness` (not `apphub.publisher.json`). Prefer real packages (`stack.backend: "real"`).
+
+Use `apphub.test.json` + `npm run test:harness` when the publisher has set up the local stack.
 
 ### Gate command (run before every register/deploy)
 
@@ -302,9 +305,13 @@ npm run test:harness -- run app <slug> --case upload  # one case after a code ch
 - **API cases** (`type: "api"`) — always run; no browser.
 - **Playwright cases** (`type: "playwright"`) — set `playwright.enabled: true` in `apphub.test.json`; skip gracefully when off.
 
-When adding a feature, add or update a case file **in the same session** before marking `PLAN.md` done.
+When adding a feature, add or update a case file **in the same session** before marking `PLAN.md` done (when using the harness).
 
-Agents: **block** `npm run apphub -- register` / production deploy steps until `pre-deploy` passes for that slug.
+**Agents — when to require `pre-deploy` before register:**
+
+- **Require** when `apphub.test.json` exists, the user is using the sandbox stack, and they have **not** opted out.
+- **Do not block** when the user explicitly skips the harness ("skip sandbox", "deploy without harness", etc.).
+- **Do not block** when `apphub.test.json` is missing and the user confirms production-only deploy — use `npm run apphub -- test <slug>` then register.
 
 ## i18n (en / vi) — required for UI
 
@@ -329,7 +336,7 @@ Agents: **block** `npm run apphub -- register` / production deploy steps until `
 
 - [ ] `PLAN.md` updated — all completed steps marked, phases reflect current state
 - [ ] `apps/<slug>/tests/sandbox-apphub/manifest.json` + case files for each major user action (local/gitignored — copy template)
-- [ ] **Sandbox gate passed:** `npm run test:harness -- run pre-deploy --slug <slug>` (local stack, JSONL logs)
+- [ ] **Sandbox gate** (if harness in use): `npm run test:harness -- run pre-deploy --slug <slug>` — or user opted out / no `apphub.test.json`
 - [ ] `manifest.json` has correct `runtime_type`, `permissions`, `api_urls`
 - [ ] Listens for `apphub:bridge:ready`; hosted: awaits `__APPHUB_STORAGE__.ready`
 - [ ] Server auth via publisher backend; never trust `display_user` for authorization

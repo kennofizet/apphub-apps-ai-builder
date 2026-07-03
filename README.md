@@ -54,25 +54,30 @@ cp apphub.publisher.example.json apphub.publisher.json
 # Edit apphub.publisher.json with your Hub URLs
 ```
 
+Root `npm install` also installs harness dependencies under `tools/test-harness/` (Playwright is optional — see test harness README).
+
 ## Release tooling
 
 After an app exists in `apps/<slug>/`:
 
 ```bash
 npm run apphub -- list
-npm run apphub -- test <slug>        # before upload — checks launch + runtime assets
+npm run apphub -- test <slug>        # quick smoke — launch + runtime assets (no sandbox stack)
 node tools/apphub.mjs release <slug> 1.0.0 -y
 npm run apphub -- register <slug>    # upload zip (needs .apphub-token.local)
 ```
 
 Upload manually or via `register`. Zip path: `apps/<slug>/release/`.
 
-## Test harness (local / staging only)
+## Test harness (optional — full local E2E)
 
-`npm run apphub -- test` is a quick smoke check. For **full local stack** (real `apphub-backend` + `@kennofizet/apphub-frontend`, dev/user tokens, JSONL logs):
+**Quick smoke (default):** `npm run apphub -- test <slug>` against your real Hub — no PHP/MySQL stack.
+
+**Full E2E (optional):** when you want dev/user accounts, dual-account checks, and per-feature Playwright cases, set up the harness:
 
 ```bash
 cp apphub.test.example.json apphub.test.json
+cd tools/test-harness && npm install   # also run by root postinstall; Playwright optional
 npm run test:harness -- stack install
 npm run test:harness -- stack update    # when upstream packages change
 npm run test:harness -- stack up

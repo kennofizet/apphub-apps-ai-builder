@@ -23,6 +23,21 @@ Default stack mode is **`stack.backend: "real"`** so tests track the same packag
 
 Laragon on Windows already includes PHP — ensure `php` and `composer` are on your PATH.
 
+## Harness dependencies
+
+```bash
+# From repo root (postinstall also runs this):
+npm install
+
+# Or only harness deps:
+cd tools/test-harness && npm install
+
+# Optional — Playwright UI cases (upload, export, …):
+cd tools/test-harness && npx playwright install chromium
+```
+
+`stack install` runs `npm install` in `tools/test-harness/` again if needed.
+
 ## Quick start (full stack)
 
 ```bash
