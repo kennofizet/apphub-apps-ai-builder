@@ -42,6 +42,7 @@ docs/sdk-stub.js                Bridge SDK
 - `runtime_type`: `hosted` (zip on Hub) or `iframe` (publisher `entry_url`).
 - **Hosted:** `await window.__APPHUB_STORAGE__?.ready`; zip `dist/` with `manifest.json` at root.
 - **Bridge:** `apphub:bridge:ready`; `display_user` for UI only; server auth via `GET bridge/user`.
+- **Parent bridge (optional):** When manifest has `parent.*` or `parent_bridge`, use `callParent` / `emitToParent` (schema 1.14.0+); read `parent_bridge` in integration docs.
 - **i18n:** `locales/en.json` + `locales/vi.json` — **bundle into JS for hosted** (do not `fetch('./locales/…')` at runtime).
 - **Themes:** dark + light via CSS variables.
 - **Export (hosted):** `desktop.download` in manifest + `bridge.saveFile` — see rules.

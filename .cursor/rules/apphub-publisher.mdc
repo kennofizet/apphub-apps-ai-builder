@@ -192,6 +192,7 @@ Follow `audiences.publisher.hosted_runtime_troubleshooting` in the integration d
 | Parent → child | `apphub:bridge:result` | `{ id, ok, result?, error? }` |
 
 **Bridge methods:** `requestPermission`, `sendDesktopMessage`, `setTaskbarBadge`, `saveFile`, `reportError`  
+When using a **parent production suite**, also: `callParent`, `emitToParent` (see below).  
 Copy/load `docs/sdk-stub.js` into your bundle or use `window.AppHubBridge`.
 
 Read `audiences.publisher.bridge.javascript_api` in the fetched integration docs for signatures — do not guess bridge methods.
@@ -206,6 +207,40 @@ Read `audiences.publisher.bridge.javascript_api` in the fetched integration docs
 | `desktop.message` | Request via `requestPermission` during session |
 | `desktop.badge` | Request via `requestPermission` during session |
 | `desktop.download` | **Hosted export** — declare in `manifest.permissions[]`; request at runtime; use `bridge.saveFile` (see below) |
+| `parent.*` | **Parent-app bridge** — nested child apps calling parent production data/events (e.g. `parent.project.list`, `parent.events`). User acks at install; scopes on launch token only after **DEV approves app version**. Read `audiences.publisher.parent_bridge` in integration docs. |
+
+### Parent-app bridge (nested child apps)
+
+Use when your app runs **inside a parent production suite** (e.g. bonus tool embedded in a project host). The platform contract is **generic RPC** — no per-domain methods in Hub core.
+
+1. **Manifest** — add `parent.*` strings to `permissions[]` and declare actions/events:
+
+```json
+{
+  "permissions": ["user.read", "parent.project.list", "parent.events"],
+  "parent_bridge": {
+    "actions": [{ "name": "project.list", "scope": "parent.project.list" }],
+    "events": [{ "name": "bonus.assign", "scope": "parent.events" }]
+  }
+}
+```
+
+Action/event **names** must match entries in your operator's integration docs (`parent_scopes` / supported platform list).
+
+2. **Client API** (after `apphub:bridge:ready`):
+
+```javascript
+const projects = await bridge.callParent('project.list', { query: { page: 1 } });
+await bridge.emitToParent('bonus.assign', { projectCode: 'ALPHA', userId: display?.id });
+```
+
+Optional convenience wrappers in `docs/sdk-stub.js`: `listProjects`, `listProjectMembers`, `getUserSignature`.
+
+3. **DEV gate** — user install consent records `parent.*` scopes; they appear on the launch token only after platform **DEV approves your app version**. Re-install after adding new `parent.*` permissions.
+
+4. **Fallback** — publisher `api_urls` backend may proxy when parent bridge is unavailable (dev/LAN). Never fabricate production data in the client.
+
+5. **Errors** — handle `ACTION_NOT_ALLOWED`, `SCOPE_NOT_GRANTED`, `PARENT_UNAVAILABLE` from integration docs; degrade UI gracefully.
 
 ### Hosted file export / download (required reading for save features)
 

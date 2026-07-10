@@ -73,6 +73,36 @@
             : error;
       return call('reportError', [payload]);
     },
+    /**
+     * Parent production suite RPC — action must be listed in manifest parent_bridge.actions.
+     * Requires matching parent.* scope on launch token and DEV-approved app version.
+     * @param {string} action e.g. 'project.list'
+     * @param {object} [args]
+     * @param {{ timeoutMs?: number }} [options]
+     */
+    callParent(action, args, options) {
+      return call('callParent', [action, args, options]);
+    },
+    /**
+     * Fire-and-forget event to parent host — event must be in manifest parent_bridge.events.
+     * @param {string} event e.g. 'bonus.assign'
+     * @param {object} [payload]
+     */
+    emitToParent(event, payload) {
+      return call('emitToParent', [event, payload]);
+    },
+    /** Optional wrapper — scope parent.project.list */
+    listProjects(query) {
+      return this.callParent('project.list', { query: query || {} });
+    },
+    /** Optional wrapper — scope parent.project.members */
+    listProjectMembers(projectCode) {
+      return this.callParent('project.members', { projectCode });
+    },
+    /** Optional wrapper — scope parent.signature.user (or action name from host config) */
+    getUserSignature(opts) {
+      return this.callParent('signature.user', opts || {});
+    },
   };
 
   window.addEventListener('message', handleMessage);
